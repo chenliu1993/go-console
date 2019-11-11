@@ -1,6 +1,9 @@
 package pkg
 
 import (
+	"fmt"
+	"os"
+	"io"
 	"net"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/containerd/console"
@@ -17,7 +20,7 @@ func HandleSocket(path string) error {
 		return err
 	}
 	defer conn.Close()
-	ln.Close())
+	ln.Close()
 
 	unixconn, ok := conn.(*net.UnixConn)
 	if !ok {

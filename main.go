@@ -6,16 +6,17 @@ import (
 )
 
 
-func main {
-	unixProcTty, err := pkg.GetUnixProcess()
+func main() {
+	unixProcTty, err := pkg.GetUnixProcess(68760)
 	if err != nil {
 		log.Fatal(err)
 	}
-	sock, err := unixProcTty.SetUnixProcessIO()
-	if err != nil {
-		log.Fatal(err)
-	}
-	err := pkg.HandleSocket(sock)
+	sock := "test.sock"
+	err = pkg.HandleSocket(sock)
+        if err != nil {
+                log.Fatal(err)
+        }
+	err = unixProcTty.SetUnixProcessIO()
 	if err != nil {
 		log.Fatal(err)
 	}

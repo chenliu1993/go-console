@@ -16,22 +16,23 @@ type UnixProcessTty struct {
 	console *os.File
 }
 
-func (p *UnixProcessTty) SetUnixProcessIO() (string, error) {
-	sockpath := filepath.Join("./", p.exec, ".sock")
+func (p *UnixProcessTty) SetUnixProcessIO() error {
+	//sockpath := filepath.Join(p.exec+".sock")
+	sockpath := "test.sock"
 	conn, err := net.Dial("unix", sockpath)
 	if err != nil {
-		return "", err
+		return err
 	}
 	uc, ok := conn.(*net.UnixConn)
 	if !ok {
-		return "", fmt.Errorf("casting to UnixConn failed")
+		return fmt.Errorf("casting to UnixConn failed")
 	}
 	socket, err := uc.File()
 	if err != nil {
-		return "", err
+		return err
 	}
 	p.console = socket
-	return sockpath, nil
+	return nil
 }
 
 func GetUnixProcess(pid int) (*UnixProcessTty, error) {
