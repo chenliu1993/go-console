@@ -16,9 +16,7 @@ type UnixProcessTty struct {
 	console *os.File
 }
 
-func (p *UnixProcessTty) SetUnixProcessIO() error {
-	//sockpath := filepath.Join(p.exec+".sock")
-	sockpath := "test.sock"
+func (p *UnixProcessTty) SetUnixProcessIO(sockpath string) error {
 	conn, err := net.Dial("unix", sockpath)
 	if err != nil {
 		return err
