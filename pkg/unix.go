@@ -2,6 +2,8 @@ package pkg
 
 import (
 	"fmt"
+	"strconv"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -40,15 +42,18 @@ func GetUnixProcess(pid int) (*UnixProcess, error) {
 }
 
 
-func UnixProcesses() ([]&UnixProcess, error) {
+func UnixProcesses() ([]*UnixProcess, error) {
 	d, err := os.Open("/proc")
 	if err != nil {
 		return nil, err
 	}
 	defer d.Close()
-	var unixProcesses []&UnixProcess
+	var unixProcesses []*UnixProcess
 	for {
 		files, err := d.Readdir(10)
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -64,12 +69,12 @@ func UnixProcesses() ([]&UnixProcess, error) {
 			if err != nil {
 				continue
 			}
-			unixProcess, err := GetUnixProcess(pid)
+			unixProcess, err := GetUnixProcess(int(pid))
 			if err != nil {
 				return nil, err
 			}
-			unixProcesses := append(unixProcesses, unixProcess)
- 		}
+			unixProcesses = append(unixProcesses, unixProcess)
+		}
 	}
 	return unixProcesses, nil
 }
