@@ -3,37 +3,18 @@ package pkg
 import (
 	"fmt"
 	"io/ioutil"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-type UnixProcessTty struct {
-	pid     int
-	ppid    int
-	exec    string
-	console *os.File
+type UnixProcess struct {
+	pid  int
+	ppid int
+	exec string
 }
 
-func (p *UnixProcessTty) SetUnixProcessIO(sockpath string) error {
-	conn, err := net.Dial("unix", sockpath)
-	if err != nil {
-		return err
-	}
-	uc, ok := conn.(*net.UnixConn)
-	if !ok {
-		return fmt.Errorf("casting to UnixConn failed")
-	}
-	socket, err := uc.File()
-	if err != nil {
-		return err
-	}
-	p.console = socket
-	return nil
-}
-
-func GetUnixProcess(pid int) (*UnixProcessTty, error) {
+func GetUnixProcess(pid int) (*UnixProcess, error) {
 	dir := fmt.Sprintf("/proc/%d", pid)
 	_, err := os.Stat(dir)
 	if err != nil {
@@ -51,9 +32,44 @@ func GetUnixProcess(pid int) (*UnixProcessTty, error) {
 	binStart := strings.IndexRune(content, '(') + 1
 	binEnd := strings.IndexRune(content[binStart:], ')')
 	exec := content[binStart : binStart+binEnd]
-	return &UnixProcessTty{
+	return &UnixProcess{
 		pid:  pid,
 		ppid: os.Getppid(),
 		exec: exec,
 	}, nil
+}
+
+
+func UnixProcesses() ([]&UnixProcess, error) {
+	d, err := os.Open("/proc")
+	if err != nil {
+		return nil, err
+	}
+	defer d.Close()
+	var unixProcesses []&UnixProcess
+	for {
+		files, err := d.Readdir(10)
+		if err != nil {
+			return nil, err
+		}
+		for _, file := range files {
+			if !file.IsDir() {
+				continue
+			}
+			name := file.Name()
+			if name[0] < '0' || name[0] > '9' {
+				continue
+			}
+			pid, err := strconv.ParseInt(name, 10, 0)
+			if err != nil {
+				continue
+			}
+			unixProcess, err := GetUnixProcess(pid)
+			if err != nil {
+				return nil, err
+			}
+			unixProcesses := append(unixProcesses, unixProcess)
+ 		}
+	}
+	return unixProcesses, nil
 }
